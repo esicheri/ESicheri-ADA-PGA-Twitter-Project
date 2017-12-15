@@ -1,0 +1,171 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Dec 10 16:18:54 2017
+
+@author: Lizzypoo
+"""
+
+import time
+start_time = time.time()
+
+
+import nltk
+
+from nltk.corpus import names
+
+#create a local text file with all the male names
+malenames1 = open("/Users/Lizzypoo/Desktop/Male_names.txt", "w+")
+for each in names.words('male.txt'):
+    malenames1.write(each + "\n")
+    
+malenames1.close()
+
+#create a local text file with all the female names
+femalenames1 = open("/Users/Lizzypoo/Desktop/Female_names.txt", "w+")
+for each in names.words('female.txt'):
+    femalenames1.write(each + "\n")
+    
+femalenames1.close()
+
+
+#uses regex to find the first name of each Twitter follower, and discards Twitter names with numbers and characters
+
+import re
+malenames = open("/Users/Lizzypoo/Desktop/Male_names.txt", "r")
+femalenames = open("/Users/Lizzypoo/Desktop/Female_names.txt", "r")
+f1 = open("/Users/Lizzypoo/Desktop/20171127_JustinThomas34_followers.txt", "r")
+f2 = open("/Users/Lizzypoo/Desktop/JT_Followers_First_Names.txt", "w+")
+f3 = open("/Users/Lizzypoo/Desktop/JT_Followers_First_Names.txt", "r")
+f4 = open("/Users/Lizzypoo/Desktop/JT_Followers_First_Names.txt", "w+")
+f5 = open("/Users/Lizzypoo/Desktop/JT_Followers_Males.txt", "w+")
+f6 = open("/Users/Lizzypoo/Desktop/JT_Followers_Females.txt", "w+")
+f7 = open("/Users/Lizzypoo/Desktop/JT_Followers_Summary.txt", "w+")
+f8 = open("/Users/Lizzypoo/Desktop/JT_Followers_No_Gender.txt", "w+")
+
+for line in f1:
+    nameline = re.search("\t(.+?)\t", line)
+    if nameline:
+        name1 = re.search("(\w+)\s*(\w*)", nameline.group(1))
+        if name1:
+            name2 = re.search("(\D+)", name1.group(1))
+            if name2:
+                name3 = re.search("([^_+!@#$%^&*()<>?:;]*)", name2.group(1))
+                if name3:
+                    f2.write(name3.group(1) + "\n")
+
+f1.close()
+f2.close()
+
+                                      
+#removing "name" and the name of the Twitter account of interest, and printing follower name count
+
+removal_count = 0
+namecount = 0
+
+for each in f3:
+    if removal_count == 0:
+        removal_count +=1
+        continue
+    elif removal_count == 1:
+        removal_count +=1
+        continue
+    elif removal_count == 2:
+        f4.write(each)
+        namecount +=1
+                
+f3.close()
+
+print(namecount)
+
+f4.close()
+
+f3 = open("/Users/Lizzypoo/Desktop/JT_Followers_First_Names.txt", "r")
+
+#creates a list in memory of names of the Twitter followers       
+                    
+JT = f3
+JT_Followers = [line.strip() for line in JT.readlines()]       
+             
+#creates a list in memory of the male names, and adds uppercase/lowercase versions of each                                                                                                                                                                                   
+
+MN = [line.strip() for line in malenames.readlines()] 
+MNCases = []
+for each in MN:
+    MNCases.append(each.lower())
+    MNCases.append(each.upper())
+    
+Male_Names = MN + MNCases                  
+
+#creates a list in memory of the female names, and adds uppercase/lowercase versions of each                                    
+
+FN = [line.strip() for line in femalenames.readlines()] 
+FNCases = []
+for each in FN:
+    FNCases.append(each.lower())
+    FNCases.append(each.upper())
+    
+Female_Names = FN + FNCases     
+                                                                                          
+#checks for the presence of male or female names in the follower list and prints the total for each gender
+#also creates a files with the followers that have been classified for each gender
+#male names go first because there are a lot of masculine names in the female list such as Andy (short for Andromeda I guess)
+#and Phil (short for Phillipa?) that are not prevalent as actual female names   
+#the names are removed from the follower list if they are in either of the gendered lists                                                                                      
+                              
+JT_Male_Followers = []
+JT_Male_Count = 0
+JT_Female_Followers = []
+JT_Female_Count = 0
+
+for each in JT_Followers:
+    if each in Male_Names: 
+        JT_Male_Count += 1
+        f5.write(each + "\n")
+        JT_Followers.remove(each)
+ 
+print(JT_Male_Count)
+
+for each in JT_Followers:
+    if each in Female_Names:
+        JT_Female_Count += 1
+        f6.write(each + "\n")
+        JT_Followers.remove(each)   
+                 
+print(JT_Female_Count)        
+     
+#creates a count and file of the non-gendered names  
+     
+JT_Unknown_Count = 0   
+for each in JT_Followers:
+    f8.write(each + "\n")
+    JT_Unknown_Count += 1
+
+print(JT_Unknown_Count)
+                                            
+#creates a summary txt file of all relevant statistics such as number of followers in each gender
+#and the unclassified followers, as well as male/female/unclassified gender percentages and gender ratios                                 
+                                                                             
+f7.write("The Twitter account of Justin Thomas @justinthomas34 \n")                          
+f7.write("The number of Followers is " + str(namecount)+ "\n")                
+f7.write("The number of Male Followers is " + str(JT_Male_Count)+ "\n")                
+f7.write("The number of Female Followers is " + str(JT_Female_Count)+ "\n")
+f7.write("The number of Unclassified Followers is " + str(JT_Unknown_Count)+ "\n")                                                
+f7.write("The percentage of followers that are male is " + str(round((float(JT_Male_Count)/float(namecount)*100), 2)) + "%\n")                                                                                
+f7.write("The percentage of followers that are female is " + str(round((float(JT_Female_Count)/float(namecount)*100), 2)) + "\n")    
+f7.write("The percentage of followers whose gender is unknown is " + str(round((float(JT_Unknown_Count)/float(namecount)*100), 2)) + "\n")     
+f7.write("The male-female gender ratio is " + str(round(int(JT_Male_Count)/int(JT_Female_Count), 2)) + "\n")                                                                                           
+                                                                                                                                
+#prints run time and closes all files     
+        
+print("--- run time is %s minutes ---" % round(float(((time.time() - start_time))/60), 3))    
+f1.close()
+f2.close()
+f3.close()
+f4.close()
+f5.close()
+f6.close()
+f7.close()
+f8.close()
+malenames.close()
+femalenames.close()
